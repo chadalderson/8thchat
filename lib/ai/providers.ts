@@ -3,7 +3,7 @@ import {
   extractReasoningMiddleware,
   wrapLanguageModel,
 } from 'ai';
-import { xai } from '@ai-sdk/xai';
+import { createOpenAI } from '@ai-sdk/openai';
 import {
   artifactModel,
   chatModel,
@@ -11,6 +11,11 @@ import {
   titleModel,
 } from './models.test';
 import { isTestEnvironment } from '../constants';
+
+// Configure OpenAI directly (bypass AI Gateway)
+const openaiProvider = createOpenAI({
+  apiKey: process.env.OPENAI_API_KEY || '',
+});
 
 export const myProvider = isTestEnvironment
   ? customProvider({
@@ -23,15 +28,12 @@ export const myProvider = isTestEnvironment
     })
   : customProvider({
       languageModels: {
-        'chat-model': xai('grok-2-vision-1212'),
+        'chat-model': openaiProvider('gpt-4o-mini'),
         'chat-model-reasoning': wrapLanguageModel({
-          model: xai('grok-3-mini-beta'),
+          model: openaiProvider('gpt-4.1-mini'),
           middleware: extractReasoningMiddleware({ tagName: 'think' }),
         }),
-        'title-model': xai('grok-2-1212'),
-        'artifact-model': xai('grok-2-1212'),
-      },
-      imageModels: {
-        'small-model': xai.imageModel('grok-2-image'),
+        'title-model': openaiProvider('gpt-4o-mini'),
+        'artifact-model': openaiProvider('gpt-4.1-mini'),
       },
     });
